@@ -81,7 +81,8 @@ successor of two; and so on.
 Write out `7` in longhand.
 
 ```
--- Your code goes here
+seven : ℕ
+seven = suc (suc (suc (suc (suc (suc (suc zero)))))) 
 ```
 
 
@@ -430,7 +431,17 @@ other word for evidence, which we will use interchangeably, is _proof_.
 Compute `3 + 4`, writing out your reasoning as a chain of equations, using the equations for `+`.
 
 ```
--- Your code goes here
+_ : 3 + 4 ≡ 7 
+_ =
+  begin
+    3 + 4
+  ≡⟨⟩ (suc (suc (suc zero))) + (suc (suc (suc (suc zero))))
+  ≡⟨⟩ (suc (suc zero)) + (suc (suc (suc (suc (suc zero)))))
+  ≡⟨⟩ suc zero + (suc (suc (suc (suc (suc (suc zero))))))
+  ≡⟨⟩ zero + (suc (suc (suc (suc (suc (suc (suc zero)))))))
+  ≡⟨⟩ suc (suc (suc (suc (suc (suc (suc zero))))))
+  ≡⟨⟩ 7
+  ∎
 ```
 
 
@@ -506,7 +517,9 @@ Define exponentiation, which is given by the following equations:
 Check that `3 ^ 4` is `81`.
 
 ```
--- Your code goes here
+_^_ : ℕ → ℕ → ℕ
+m ^ 0  =  suc zero
+m ^ (suc n)  = m * (m ^ n)
 ```
 
 
@@ -918,9 +931,79 @@ represents a positive natural, and represent zero by `⟨⟩ O`.
 Confirm that these both give the correct answer for zero through four.
 
 ```
--- Your code goes here
-```
+inc : Bin -> Bin
+inc ⟨⟩ = ⟨⟩ I
+inc (m O) = m I
+inc (m I) = inc m O
 
+
+to : ℕ → Bin
+to zero = ⟨⟩ O
+to (suc m) = inc (to m)
+
+from : Bin -> ℕ
+from ⟨⟩ = 0
+from (m O) = from m * 2
+from (m I) = from m * 2 + 1
+
+_ : inc (⟨⟩ O) ≡ ⟨⟩ I
+_ =
+  begin
+    inc (⟨⟩ O)
+  ≡⟨⟩
+    ⟨⟩ I
+  ∎
+
+_ : inc (⟨⟩ I) ≡ ⟨⟩ I O
+_ =
+  begin
+    inc (⟨⟩ I)
+  ≡⟨⟩
+    (inc ⟨⟩) O
+  ≡⟨⟩
+    ⟨⟩ I O
+  ∎
+
+_ : inc (⟨⟩ I O) ≡ ⟨⟩ I I
+_ =
+  begin
+    inc (⟨⟩ I O)
+  ≡⟨⟩
+    ⟨⟩ I I
+  ∎
+
+_ : inc (⟨⟩ I I) ≡ ⟨⟩ I O O
+_ =
+  begin
+    inc (⟨⟩ I I)
+  ≡⟨⟩
+    inc (⟨⟩ I) O
+  ≡⟨⟩
+    inc (⟨⟩) O O
+  ≡⟨⟩
+    ⟨⟩ I O O
+  ∎
+
+_ : from (⟨⟩ I O O) ≡ 4
+_ =
+  begin
+    from (⟨⟩ I O O)
+  ≡⟨⟩
+    from (⟨⟩ I O) * 2
+  ≡⟨⟩
+    from (⟨⟩ I) * 2 * 2
+  ≡⟨⟩
+    (from (⟨⟩) * 2 + 1) * 2 * 2
+  ≡⟨⟩
+    (0 * 2 + 1) * 2 * 2
+  ≡⟨⟩
+    (0 + 1) * 2 * 2
+  ≡⟨⟩
+    1 * 2 * 2
+  ≡⟨⟩
+    2 * 2
+  ∎
+```
 
 ## Standard library
 
