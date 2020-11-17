@@ -29,7 +29,7 @@ and some operations upon them.  We also import a couple of new operations,
 import Relation.Binary.PropositionalEquality as Eq
 open Eq using (_≡_; refl; cong; sym)
 open Eq.≡-Reasoning using (begin_; _≡⟨⟩_; step-≡; _∎)
-open import Data.Nat using (ℕ; zero; suc; _+_; _*_; _∸_)
+open import Data.Nat using (ℕ; zero; suc; _+_; _*_; _∸_; _^_)
 ```
 
 
@@ -856,6 +856,11 @@ typing `C-c C-r` will fill it in, completing the proof:
     +-assoc′ zero n p = refl
     +-assoc′ (suc m) n p rewrite +-assoc′ m n p = refl
 
+```
++-assoc′' : ∀ (m n p : ℕ) → (m + n) + p ≡ m + (n + p)
++-assoc′' zero n p = refl
++-assoc′' (suc m) n p rewrite +-assoc′' m n p = refl
+```
 
 #### Exercise `+-swap` (recommended) {name=plus-swap}
 
@@ -868,9 +873,24 @@ just apply the previous results which show addition
 is associative and commutative.
 
 ```
--- Your code goes here
-```
++-swap : ∀ (m n p : ℕ) → m + (n + p) ≡ n + (m + p)
++-swap m n p =
+ begin
+   m + (n + p)
+ ≡⟨ sym (+-assoc m n p) ⟩
+   (m + n) + p
+ ≡⟨ cong (_+ p) (+-comm m n) ⟩
+   (n + m) + p
+ ≡⟨ +-assoc n m p ⟩
+   n + (m + p)
+ ∎
 
++-swap' : ∀ (m n p : ℕ) → m + (n + p) ≡ n + (m + p)
++-swap' m n p rewrite
+    sym (+-assoc m n p)
+  | +-comm m n
+  | +-assoc n m p = refl
+```
 
 #### Exercise `*-distrib-+` (recommended) {name=times-distrib-plus}
 
@@ -881,9 +901,12 @@ Show multiplication distributes over addition, that is,
 for all naturals `m`, `n`, and `p`.
 
 ```
--- Your code goes here
+*-distrib-+ : ∀ (m n p : ℕ) → (m + n) * p ≡ m * p + n * p
+*-distrib-+ zero n p = refl
+*-distrib-+ (suc m) n p
+  rewrite *-distrib-+ m n p
+  | sym (+-assoc p (m * p) (n * p)) = refl
 ```
-
 
 #### Exercise `*-assoc` (recommended) {name=times-assoc}
 
@@ -894,9 +917,12 @@ Show multiplication is associative, that is,
 for all naturals `m`, `n`, and `p`.
 
 ```
--- Your code goes here
+*-assoc : ∀ (m n p : ℕ) → (m * n) * p ≡ m * (n * p)
+*-assoc zero n p = refl
+*-assoc (suc m) n p
+  rewrite *-distrib-+ n (m * n) p
+  | *-assoc m n p  = refl
 ```
-
 
 #### Exercise `*-comm` (practice) {name=times-comm}
 
@@ -908,9 +934,23 @@ for all naturals `m` and `n`.  As with commutativity of addition,
 you will need to formulate and prove suitable lemmas.
 
 ```
--- Your code goes here
-```
+*-zero-r : ∀ (m : ℕ) → zero ≡ m * zero
+*-zero-r zero  = refl
+*-zero-r (suc m) = *-zero-r m
 
+*-suc : ∀ (m n : ℕ) → m * suc n ≡ m + m * n
+*-suc zero n = refl 
+*-suc (suc m) n rewrite *-suc m n
+  | sym (+-assoc n m (m * n) )
+  | +-comm n m
+  | +-assoc n m (m * n)
+  | sym (+-assoc m n (m * n)) = refl
+
+*-comm : ∀ (m n : ℕ) → m * n ≡ n * m 
+*-comm zero n = *-zero-r n
+*-comm (suc m) n rewrite *-suc n m
+ | *-comm m n = refl
+```
 
 #### Exercise `0∸n≡0` (practice) {name=zero-monus}
 
@@ -948,6 +988,41 @@ Show the following three laws
 
 for all `m`, `n`, and `p`.
 
+```
+^-distribˡ-|-* : ∀ (m n p : ℕ) → m ^ (n + p) ≡ (m ^ n) * (m ^ p)
+^-distribˡ-|-* m zero p rewrite +-identityʳ (m ^ p) = refl
+^-distribˡ-|-* m (suc n) p
+     rewrite ^-distribˡ-|-* m n p
+     | *-assoc m (m ^ n) (m ^ p) = refl
+
+^-distribʳ-* : ∀ (m n p : ℕ) → (m * n) ^ p ≡ (m ^ p) * (n ^ p)
+^-distribʳ-* m n zero = refl
+^-distribʳ-* m n (suc p) =
+  begin
+   (m * n) ^ (suc p)
+  ≡⟨⟩
+   (m * n) * (m * n) ^ p
+  ≡⟨ cong ((m * n) *_) (^-distribʳ-* m n p) ⟩  
+   m * n * ((m ^ p) * (n ^ p))
+  ≡⟨ sym (*-assoc (m * n) (m ^ p) (n ^ p)) ⟩
+   (m * n * (m ^ p)) * (n ^ p)
+  ≡⟨ cong (_* (n ^ p)) (*-comm (m * n) (m ^ p)) ⟩
+   ((m ^ p) * (m * n)) * (n ^ p)
+  ≡⟨ cong (_* (n ^ p)) (sym (*-assoc (m ^ p) m n)) ⟩
+   ((m ^ p * m) * n) * (n ^ p)
+  ≡⟨ cong (_* (n ^ p)) ((cong (_* n) (*-comm (m ^ p) m))) ⟩
+   ((m * m ^ p) * n) * (n ^ p)
+  ≡⟨ (*-assoc (m * m ^ p) n (n ^ p)) ⟩
+   (m * m ^ p) * (n * (n ^ p))
+ ∎
+
+^-*-assoc : ∀ (m n p : ℕ) → (m ^ n) ^ p ≡ m ^ (n * p)
+^-*-assoc m n zero rewrite (sym (*-zero-r n)) = refl
+^-*-assoc m n (suc p) rewrite (*-suc n p)
+  | ^-distribˡ-|-* m n (n * p)
+  | ^-*-assoc m n p = refl
+```
+
 
 #### Exercise `Bin-laws` (stretch) {name=Bin-laws}
 
@@ -970,9 +1045,46 @@ over bitstrings:
 For each law: if it holds, prove; if not, give a counterexample.
 
 ```
--- Your code goes here
-```
+data Bin : Set where
+  ⟨⟩ : Bin
+  _O : Bin → Bin
+  _I : Bin → Bin
 
+inc : Bin -> Bin
+inc ⟨⟩ = ⟨⟩ I
+inc (m O) = m I
+inc (m I) = inc m O
+
+
+to : ℕ → Bin
+to zero = ⟨⟩ O
+to (suc m) = inc (to m)
+
+from : Bin -> ℕ
+from ⟨⟩ = 0
+from (m O) = from m * 2
+from (m I) = from m * 2 + 1
+
+bin-inc-suc : ∀ (b : Bin) → from (inc b) ≡ suc (from b)
+bin-inc-suc ⟨⟩ = refl
+bin-inc-suc (b O)  rewrite +-comm (from b * 2) 1 = refl
+bin-inc-suc (b I) rewrite bin-inc-suc b
+  | +-comm (from b * 2) 1 = refl
+
+-- to (from b) ≡ b
+-- Does not hold. to (from ⟨⟩ O O) = O
+
+from-to-n-lemma : ∀ (b : Bin) → from (inc b) ≡ suc (from b)
+from-to-n-lemma ⟨⟩ = refl
+from-to-n-lemma (b O) rewrite (+-comm (from b * 2) 1)= refl
+from-to-n-lemma (b I) rewrite (+-comm (from b * 2) 1)
+ | from-to-n-lemma b = refl
+
+from-to-n : ∀ (n : ℕ) → from (to n) ≡ n
+from-to-n zero = refl
+from-to-n (suc n) rewrite from-to-n-lemma (to n)
+ | from-to-n n = refl
+```
 
 ## Standard library
 
