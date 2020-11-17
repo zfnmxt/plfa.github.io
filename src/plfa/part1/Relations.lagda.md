@@ -246,13 +246,26 @@ partial order but not a total order.
 Give an example of a preorder that is not a partial order.
 
 ```
--- Your code goes here
+data _≤1_ : ℕ → ℕ → Set where
+
+  n≤1m : ∀ {n m : ℕ}
+      --------
+    → n ≤1 m
 ```
 
 Give an example of a partial order that is not a total order.
 
 ```
--- Your code goes here
+data _≤2_ : ℕ → ℕ → Set where
+
+  z≤2z :
+       -----
+       zero ≤2 zero
+
+  n≤2m : ∀ {n m : ℕ}
+     → n ≤2 m
+       -------
+     → suc n ≤2 suc m
 ```
 
 ## Reflexivity
@@ -555,7 +568,30 @@ transitivity proves `m + p ≤ n + q`, as was to be shown.
 Show that multiplication is monotonic with regard to inequality.
 
 ```
--- Your code goes here
+open import Data.Nat using (_*_)
+open import Data.Nat.Properties using (*-comm)
+*-mono-≤-left : ∀ (n p q : ℕ)
+  → p ≤ q
+    ---------------
+  → n * p ≤ n * q
+*-mono-≤-left zero p q p≤q = z≤n
+*-mono-≤-left (suc n) p q p≤q = +-mono-≤ _ _ _ _ p≤q n*p≤n*q
+  where n*p≤n*q : n * p ≤ n * q
+        n*p≤n*q = *-mono-≤-left n p q p≤q
+
+*-mono-≤-right : ∀ (m n p : ℕ)
+  → m ≤ n
+    ---------------
+  → m * p ≤ n * p
+*-mono-≤-right m n zero m≤n
+   rewrite   *-comm m zero
+           | *-comm n zero = z≤n
+*-mono-≤-right m n (suc p) m≤n
+   rewrite   *-comm m (suc p)
+           | *-comm n (suc p) = +-mono-≤ _ _ _ _ m≤n m*p≤n*p 
+  where m*p≤n*p : p * m ≤ p * n
+        m*p≤n*p
+          rewrite *-comm p m | *-comm p n = *-mono-≤-right m n p m≤n
 ```
 
 
@@ -602,7 +638,13 @@ exploiting the corresponding properties of inequality.
 Show that strict inequality is transitive.
 
 ```
--- Your code goes here
+<-trans : ∀ {m n p : ℕ}
+  → m < n
+  → n < p
+    -----
+  → m < p
+<-trans z<s (s<s _) = z<s
+<-trans (s<s m<n) (s<s n<p) = s<s (<-trans m<n n<p)
 ```
 
 #### Exercise `trichotomy` (practice) {name=trichotomy}
@@ -620,7 +662,32 @@ similar to that used for totality.
 [negation](/Negation/).)
 
 ```
--- Your code goes here
+data Trichotomy (m n : ℕ) : Set where
+
+  less :
+      m < n
+      --------
+    → Trichotomy m n
+
+  eq :
+      m ≡ n
+      --------
+    → Trichotomy m n
+
+  more :
+      n < m
+      --------
+    → Trichotomy m n
+
+<-trichotomy : ∀ (m n : ℕ) → Trichotomy m n
+<-trichotomy zero zero = eq refl
+<-trichotomy (suc m) zero = more z<s
+<-trichotomy zero (suc n) = less z<s
+<-trichotomy (suc m) (suc n)
+  with <-trichotomy m n
+...  | less m<n = less (s<s m<n)
+...  | eq m≡n rewrite m≡n = eq refl
+...  | more n<m = more (s<s n<m)
 ```
 
 #### Exercise `+-mono-<` (practice) {name=plus-mono-less}
@@ -637,7 +704,13 @@ As with inequality, some additional definitions may be required.
 Show that `suc m ≤ n` implies `m < n`, and conversely.
 
 ```
--- Your code goes here
+≤-if-< : ∀ (m n : ℕ) → suc m ≤ n → m < n
+≤-if-< zero n (s≤s m<n') = z<s
+≤-if-< (suc m') (suc n') (s≤s m<n') = s<s (≤-if-< m' n' m<n')
+
+<-if-≤ : ∀ {m n : ℕ} → m < n → suc m ≤ n
+<-if-≤ z<s = s≤s z≤n
+<-if-≤ (s<s z<n) = s≤s (<-if-≤ z<n)
 ```
 
 #### Exercise `<-trans-revisited` (practice) {name=less-trans-revisited}
@@ -754,7 +827,9 @@ successor of the sum of two even numbers, which is even.
 Show that the sum of two odd numbers is even.
 
 ```
--- Your code goes here
+open import Data.Nat.Properties using (+-suc)
+o+o≡e : ∀ (m n : ℕ) → odd m → odd n → even (m + n)
+o+o≡e (suc m) (suc n) (suc eₘ) (suc eₙ) rewrite +-suc m n = suc (suc (e+e≡e eₘ eₙ))
 ```
 
 #### Exercise `Bin-predicates` (stretch) {name=Bin-predicates}
@@ -807,7 +882,51 @@ properties of `One`. Also, you may need to prove that
 if `One b` then `1` is less or equal to the result of `from b`.)
 
 ```
--- Your code goes here
+open import plfa.part1.Induction using (Bin;⟨⟩;_O;_I;inc;to;from)
+data One : Bin -> Set where
+  one :
+    ---------
+    One (⟨⟩ I)
+  oneI : ∀ {b : Bin}
+   → One b
+     --------------
+   → One (b I)
+  oneO : ∀ {b : Bin}
+   → One b
+     --------------
+   → One (b O)
+
+data Can : Bin -> Set where
+  can :
+    ---------
+    Can (⟨⟩ O)
+
+  cans : ∀ {b : Bin}
+    → One b
+      ---------
+    → Can b
+
+one-inc : ∀ {b : Bin} -> One b -> One (inc b)
+one-inc one = oneO one
+one-inc (oneI h) = oneO (one-inc h)
+one-inc (oneO h) = oneI h
+
+can-inc : ∀ {b : Bin} → Can b → Can (inc b)
+can-inc can = cans one
+can-inc (cans x) = cans (one-inc x)
+
+can-to : ∀ (n : ℕ) -> Can (to n)
+can-to zero = can
+can-to (suc n) = can-inc (can-to n)
+
+one-to-from : ∀ {b : Bin} -> One b -> to (from b) ≡ b
+one-to-from one = refl
+one-to-from {b I} (oneI oneb) rewrite +-comm (from b * 2) 1 = {!!}
+one-to-from (oneO oneb) = {!!}
+
+can-to-from : ∀ {b : Bin} -> Can b -> to (from b) ≡ b
+can-to-from can = refl
+can-to-from (cans x) = {!!}
 ```
 
 ## Standard library
