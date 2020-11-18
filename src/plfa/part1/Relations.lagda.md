@@ -883,18 +883,15 @@ if `One b` then `1` is less or equal to the result of `from b`.)
 
 ```
 open import plfa.part1.Induction using (Bin;⟨⟩;_O;_I;inc;to;from)
+
 data One : Bin -> Set where
   one :
     ---------
     One (⟨⟩ I)
-  oneI : ∀ {b : Bin}
+  ones : ∀ {b : Bin}
    → One b
      --------------
-   → One (b I)
-  oneO : ∀ {b : Bin}
-   → One b
-     --------------
-   → One (b O)
+   → One (inc b)
 
 data Can : Bin -> Set where
   can :
@@ -907,9 +904,8 @@ data Can : Bin -> Set where
     → Can b
 
 one-inc : ∀ {b : Bin} -> One b -> One (inc b)
-one-inc one = oneO one
-one-inc (oneI h) = oneO (one-inc h)
-one-inc (oneO h) = oneI h
+one-inc one = ones one
+one-inc (ones h) = ones (ones h)
 
 can-inc : ∀ {b : Bin} → Can b → Can (inc b)
 can-inc can = cans one
@@ -919,14 +915,48 @@ can-to : ∀ (n : ℕ) -> Can (to n)
 can-to zero = can
 can-to (suc n) = can-inc (can-to n)
 
-one-to-from : ∀ {b : Bin} -> One b -> to (from b) ≡ b
-one-to-from one = refl
-one-to-from {b I} (oneI oneb) rewrite +-comm (from b * 2) 1 = {!!}
-one-to-from (oneO oneb) = {!!}
+open import Data.Nat.Properties using (*-distribʳ-+)
+
+from-inc : ∀ (b : Bin)
+             -> from (inc b) ≡ from b + 1
+from-inc ⟨⟩ = refl
+from-inc (b O) = refl
+from-inc (b I)
+  rewrite from-inc b
+  | *-distribʳ-+ 2 (from b) 1
+  | +-comm (from b * 2) 2
+  | +-comm (from b * 2 + 1) 1
+  | +-comm (from b * 2 ) 1
+    = refl
+
+inc-to-from : ∀ (b : Bin)
+             -> to (from (inc b)) ≡ inc (to (from b))
+inc-to-from ⟨⟩ = refl
+inc-to-from (b O) rewrite +-comm (from b * 2) 1 = refl
+inc-to-from (b I)
+     rewrite +-comm (from b * 2) 1
+     | *-comm (from (inc b)) 2
+     | *-comm (from b) 2
+        rewrite from-inc b
+        | +-comm (from b) 1
+        | +-comm (from b) 0
+        | +-comm (from b) (suc (from b))
+         = refl
+
+open Eq using (sym)
+
+one-to-from : ∀ (b : Bin)
+               -> One b
+               -> to (from b) ≡ b
+one-to-from b one = refl
+one-to-from b (ones {b1} h)
+  rewrite (inc-to-from b1)
+  | one-to-from b1 h
+   = refl
 
 can-to-from : ∀ {b : Bin} -> Can b -> to (from b) ≡ b
 can-to-from can = refl
-can-to-from (cans x) = {!!}
+can-to-from {b} (cans oneh) = one-to-from b oneh
 ```
 
 ## Standard library
