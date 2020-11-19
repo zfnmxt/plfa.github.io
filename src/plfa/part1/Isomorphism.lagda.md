@@ -261,15 +261,15 @@ functions, and use equational reasoning to combine the inverses:
     { to       = to   B≃C ∘ to   A≃B
     ; from     = from A≃B ∘ from B≃C
     ; from∘to  = λ{x →
-        begin
-          (from A≃B ∘ from B≃C) ((to B≃C ∘ to A≃B) x)
-        ≡⟨⟩
-          from A≃B (from B≃C (to B≃C (to A≃B x)))
-        ≡⟨ cong (from A≃B) (from∘to B≃C (to A≃B x)) ⟩
-          from A≃B (to A≃B x)
-        ≡⟨ from∘to A≃B x ⟩
-          x
-        ∎}
+         begin
+           (from A≃B ∘ from B≃C) ((to B≃C ∘ to A≃B) x)
+         ≡⟨⟩
+           from A≃B (from B≃C (to B≃C (to A≃B x)))
+         ≡⟨ cong (from A≃B) (from∘to B≃C (to A≃B x)) ⟩
+           from A≃B (to A≃B x)
+         ≡⟨ from∘to A≃B x ⟩
+           x
+         ∎}
     ; to∘from = λ{y →
         begin
           (to B≃C ∘ to A≃B) ((from A≃B ∘ from B≃C) y)
@@ -416,7 +416,7 @@ module ≲-Reasoning where
 
   ≲-begin_ : ∀ {A B : Set}
     → A ≲ B
-      -----
+      ----
     → A ≲ B
   ≲-begin A≲B = A≲B
 
@@ -428,7 +428,7 @@ module ≲-Reasoning where
   A ≲⟨ A≲B ⟩ B≲C = ≲-trans A≲B B≲C
 
   _≲-∎ : ∀ (A : Set)
-      -----
+      ------
     → A ≲ A
   A ≲-∎ = ≲-refl
 
@@ -447,7 +447,16 @@ postulate
 ```
 
 ```
--- Your code goes here
+≃-embed-≲ : ∀ {A B : Set}
+    → A ≃ B
+      -----
+    → A ≲ B
+≃-embed-≲ A≃B =
+  record
+    { to = to A≃B
+    ; from = from A≃B
+    ; from∘to = from∘to A≃B
+    }
 ```
 
 #### Exercise `_⇔_` (practice) {name=iff}
@@ -482,7 +491,16 @@ which satisfy the following property:
 
 Using the above, establish that there is an embedding of `ℕ` into `Bin`.
 ```
--- Your code goes here
+open import plfa.part1.Induction using (Bin;from-to-n)
+  renaming (to to ℕ-to-Bin;from to Bin-from-ℕ)
+
+ℕ-embed-Bin : ℕ ≲ Bin
+ℕ-embed-Bin =
+  record
+    { to = ℕ-to-Bin
+    ; from = Bin-from-ℕ
+    ; from∘to = from-to-n
+    }
 ```
 
 Why do `to` and `from` not form an isomorphism?
