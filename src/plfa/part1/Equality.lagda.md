@@ -280,6 +280,7 @@ data ℕ : Set where
   zero : ℕ
   suc  : ℕ → ℕ
 
+infixl 6 _+_
 _+_ : ℕ → ℕ → ℕ
 zero    + n  =  n
 (suc m) + n  =  suc (m + n)
@@ -354,7 +355,119 @@ it to write out an alternative proof that addition is monotonic with
 regard to inequality.  Rewrite all of `+-monoˡ-≤`, `+-monoʳ-≤`, and `+-mono-≤`.
 
 ```
--- Your code goes here
+module ≤-Reasoning where
+
+  infix  4 _≤_
+
+  data _≤_ : ℕ → ℕ → Set where
+  
+    z≤n : ∀ {n : ℕ}
+        --------
+      → zero ≤ n
+  
+    s≤s : ∀ {m n : ℕ}
+      → m ≤ n
+        -------------
+      → suc m ≤ suc n
+
+  ≤-refl : ∀ {n : ℕ}
+      -----
+    → n ≤ n
+  ≤-refl {zero} = z≤n
+  ≤-refl {suc n} = s≤s ≤-refl
+
+  ≤-trans : ∀ {m n p : ℕ}
+    → m ≤ n
+    → n ≤ p
+      -----
+    → m ≤ p
+  ≤-trans z≤n       _          =  z≤n
+  ≤-trans (s≤s m≤n) (s≤s n≤p)  =  s≤s (≤-trans m≤n n≤p)
+
+  infix  1 ≤-begin_
+  infixr 2 _≤⟨⟩_ _≤⟨_⟩_
+  infix  3 _≤∎
+
+  ≤-begin_ : ∀ {x y : ℕ}
+    → x ≤ y
+      -----
+    → x ≤ y
+  ≤-begin_ x≤y = x≤y
+
+  _≤⟨_⟩_ : ∀ (x : ℕ) {y z : ℕ}
+    -> x ≤ y
+    -> y ≤ z
+       -----
+    -> x ≤ z
+  x ≤⟨ x≤y ⟩ y≤z = ≤-trans x≤y y≤z
+
+  _≤⟨⟩_ : ∀ (x : ℕ) {y : ℕ}
+    -> x ≤ y
+       -----
+    -> x ≤ y
+  x ≤⟨⟩ x≤y = x≤y
+
+  _≤∎ : ∀ (x : ℕ)
+       -----
+    -> x ≤ x
+  x ≤∎ = ≤-refl
+
+  +-monoʳ-≤ : ∀ (n x y : ℕ)
+    → x ≤ y
+      -------------
+    → n + x ≤ n + y
+  +-monoʳ-≤ zero x y x≤y =
+    ≤-begin
+      zero + x
+    ≤⟨⟩
+      x
+    ≤⟨ x≤y ⟩
+      y
+    ≤⟨⟩
+      zero + y
+    ≤∎
+  +-monoʳ-≤ (suc n) x y x≤y  =
+    ≤-begin
+      (suc n) + x
+    ≤⟨⟩
+      suc (n + x)
+    ≤⟨ s≤s (+-monoʳ-≤ n x y x≤y) ⟩
+      suc (n + y)
+    ≤⟨⟩
+      (suc n) + y
+    ≤∎
+
+  +-monoˡ-≤ : ∀ (x y n : ℕ)
+    → x ≤ y
+      -------------
+    → x + n ≤ y + n
+  +-monoˡ-≤ x y zero x≤y with x + zero | +-comm zero x | y + zero | +-comm zero y
+  ...                    | .x | refl | .y | refl =
+    ≤-begin
+     zero + x
+    ≤⟨ ≤-refl ⟩
+      x
+    ≤⟨ x≤y ⟩
+      y
+    ≤⟨ ≤-refl ⟩
+      zero + y
+    ≤∎
+  +-monoˡ-≤ x y (suc n) x≤y with x + (suc n) | +-comm (suc n) x | y + (suc n) | +-comm (suc n) y
+  ...                    | .(suc (n + x)) | refl | .(suc (n + y)) | refl = +-monoʳ-≤ (suc n) x y x≤y
+
+  +-mono-≤ : ∀ (m n x y : ℕ)
+    → m ≤ n
+    → x ≤ y
+      -------------
+    → m + x ≤ n + y
+  +-mono-≤ m n x y m≤n x≤y =
+    ≤-begin
+      m + x
+    ≤⟨ +-monoˡ-≤ m n x m≤n ⟩
+      n + x
+    ≤⟨ +-monoʳ-≤ n x y x≤y ⟩
+      n + y
+    ≤∎
 ```
 
 
