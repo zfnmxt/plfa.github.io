@@ -664,14 +664,14 @@ and the second by a variant of function composition:
 ```
 refl-≐ : ∀ {A : Set} {x : A}
   → x ≐ x
-refl-≐ P Px  =  Px
+refl-≐ P Px  = Px 
 
 trans-≐ : ∀ {A : Set} {x y z : A}
   → x ≐ y
   → y ≐ z
     -----
   → x ≐ z
-trans-≐ x≐y y≐z P Px  =  y≐z P (x≐y P Px)
+trans-≐ x≐y y≐z P Px = y≐z P (x≐y P Px)
 ```
 
 Symmetry is less obvious.  We have to show that if `P x` implies `P y`
@@ -682,14 +682,11 @@ sym-≐ : ∀ {A : Set} {x y : A}
   → x ≐ y
     -----
   → y ≐ x
-sym-≐ {A} {x} {y} x≐y P  =  Qy
-  where
-    Q : A → Set
-    Q z = P z → P x
-    Qx : Q x
-    Qx = refl-≐ P
-    Qy : Q y
-    Qy = x≐y Q Qx
+sym-≐ {A} {x} {y} x≐y P  = Qx (refl-≐ P)
+  where Q : A → Set
+        Q z = P z → P x
+        Qx : (P x → P x) → P y →  P x
+        Qx = x≐y Q
 ```
 
 Given `x ≐ y`, a specific `P`, we have to construct a proof that `P y`
@@ -708,7 +705,7 @@ of `P x` is also a proof of `P y`:
   → x ≡ y
     -----
   → x ≐ y
-≡-implies-≐ x≡y P  =  subst P x≡y
+≡-implies-≐ x≡y P  = subst P x≡y
 ```
 This direction follows from substitution, which we showed earlier.
 
@@ -719,14 +716,11 @@ to a proof of `P y` we need to show `x ≡ y`:
   → x ≐ y
     -----
   → x ≡ y
-≐-implies-≡ {A} {x} {y} x≐y  =  Qy
-  where
-    Q : A → Set
-    Q z = x ≡ z
-    Qx : Q x
-    Qx = refl
-    Qy : Q y
-    Qy = x≐y Q Qx
+≐-implies-≡ {A} {x} {y} x≐y  = x≐y Q Qx
+  where Q : A → Set
+        Q z = x ≡ z
+        Qx : x ≡ x
+        Qx = refl
 ```
 The proof is similar to that for symmetry of Leibniz equality. We take
 `Q` to be the predicate that holds of `z` if `x ≡ z`. Then `Q x` is
