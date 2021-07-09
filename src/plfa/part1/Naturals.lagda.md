@@ -81,7 +81,7 @@ successor of two; and so on.
 Write out `7` in longhand.
 
 ```
--- Your code goes here
+seven = suc (suc (suc (suc (suc (suc (suc zero)))))) 
 ```
 
 
@@ -430,7 +430,13 @@ other word for evidence, which we will use interchangeably, is _proof_.
 Compute `3 + 4`, writing out your reasoning as a chain of equations, using the equations for `+`.
 
 ```
--- Your code goes here
+_ : 3 + 4 ≡ 7
+_ =
+  begin
+    3 + 4
+  ≡⟨⟩
+    7   -- lol
+  ∎
 ```
 
 
@@ -506,7 +512,17 @@ Define exponentiation, which is given by the following equations:
 Check that `3 ^ 4` is `81`.
 
 ```
--- Your code goes here
+_^_ : ℕ → ℕ → ℕ
+m ^ zero  = 1
+m ^ (suc n) = m * (m ^ n)
+
+_ : 3 ^ 4 ≡ 81
+_ =
+  begin
+    3 ^ 4
+  ≡⟨⟩
+    81
+  ∎
 ```
 
 
@@ -759,8 +775,11 @@ and proofs interactively.
 
 Begin by typing:
 
-    _+_ : ℕ → ℕ → ℕ
-    m + n = ?
+```
+_++_ : ℕ → ℕ → ℕ
+zero ++ n = n
+suc m ++ n = suc (m ++ n)
+```
 
 The question mark indicates that you would like Agda to help with
 filling in that part of the code. If you type `C-c C-l` (pressing
@@ -918,7 +937,49 @@ represents a positive natural, and represent zero by `⟨⟩ O`.
 Confirm that these both give the correct answer for zero through four.
 
 ```
--- Your code goes here
+inc : Bin → Bin
+inc ⟨⟩ = ⟨⟩ O
+inc (b O) = b I
+inc (b I) = inc b O
+
+_ : inc (⟨⟩ I O I I) ≡ ⟨⟩ I I O O
+_ = begin
+      inc (⟨⟩ I O I I)
+    ≡⟨⟩
+      inc (⟨⟩ I O I) O
+    ≡⟨⟩
+      inc (⟨⟩ I O) O O
+    ≡⟨⟩
+      ⟨⟩ I I O O
+    ∎
+
+to : ℕ → Bin
+to zero = ⟨⟩ O
+to (suc n) = inc (to n)
+
+from : Bin → ℕ
+from ⟨⟩ = 0
+from (b O) = from b * 2
+from (b I) = suc (from b * 2)
+
+_ : from (⟨⟩ I I O O) ≡ 12
+_ = begin
+      from (⟨⟩ I I O O)
+   ≡⟨⟩
+      from (⟨⟩ I I O) * 2
+   ≡⟨⟩
+      from (⟨⟩ I I) * 2 * 2
+   ≡⟨⟩
+      suc (from (⟨⟩ I) * 2) * 2 * 2
+   ≡⟨⟩
+      suc (suc (from ⟨⟩ * 2) * 2) * 2 * 2
+   ≡⟨⟩
+      suc (suc (0 * 2) * 2) * 2 * 2
+   ≡⟨⟩
+      3 * 2 * 2
+   ≡⟨⟩
+      12
+   ∎
 ```
 
 
@@ -968,7 +1029,7 @@ where you navigated to the last time, and starts with the same
 character next time.  The command `\l` works similarly for left arrows.
 In place of left, right, up, and down keys, one may also use control
 characters:
-
+➩
     C-b  left (backward one character)
     C-f  right (forward one character)
     C-p  up (to the previous line)
